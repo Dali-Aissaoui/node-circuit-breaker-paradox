@@ -123,21 +123,21 @@ This project consists of several components working together:
 ### Service Interaction
 
 ```mermaid
-graph TD
-    A[Load Test] --> B[Proxy Server (CB)]
+flowchart TD
+    A[Load Test] --> B[Proxy Server]
     B --> C[Unstable Backend]
     D[Event Loop Pressure] --> B
     B --> E[Metrics]
     E --> F[Prometheus]
     F --> G[Grafana]
     
-    classDef primary fill:#4285F4,stroke:#333,color:white,stroke-width:2px
-    classDef secondary fill:#34A853,stroke:#333,color:white,stroke-width:2px
-    classDef tertiary fill:#EA4335,stroke:#333,color:white,stroke-width:2px
-    
-    class A,D primary
-    class B,C secondary
-    class E,F,G tertiary
+    style A fill:#4285F4,stroke:#333,color:white,stroke-width:2px
+    style D fill:#4285F4,stroke:#333,color:white,stroke-width:2px
+    style B fill:#34A853,stroke:#333,color:white,stroke-width:2px
+    style C fill:#34A853,stroke:#333,color:white,stroke-width:2px
+    style E fill:#EA4335,stroke:#333,color:white,stroke-width:2px
+    style F fill:#EA4335,stroke:#333,color:white,stroke-width:2px
+    style G fill:#EA4335,stroke:#333,color:white,stroke-width:2px
 ```
 
 ## What This Project Demonstrates
