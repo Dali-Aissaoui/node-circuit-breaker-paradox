@@ -74,14 +74,17 @@ I still remember the "aha!" moment when I finally understood it. Basically, even
 
 ### Visual Representation
 
-```mermaid
-flowchart TD
-    A[Call Stack] --> B[WebAPIs/C++ APIs]
-    B --> C[Callback Queue]
-    C -->|Event Loop| A
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#9f9,stroke:#333,stroke-width:2px
+```
+   ┌───────────────────────────┐
+┌─>│           Call Stack      │
+│  └───────────────────────────┘
+│  ┌───────────────────────────┐
+│  │      WebAPIs/C++ APIs     │
+│  └───────────────────────────┘
+│  ┌───────────────────────────┐
+│  │        Callback Queue     │
+└──│  (setTimeout, I/O, etc.)  │
+   └───────────────────────────┘
 ```
 
 ### Event Loop Phases
@@ -122,28 +125,24 @@ This project consists of several components working together:
 
 ### Service Interaction
 
-```mermaid
-graph TD
-    A[Load Test] --> B[Proxy Server (CB)]
-    B --> C[Unstable Backend]
-    D[Event Loop Pressure] --> B
-    B --> E[Metrics]
-    E --> F[Prometheus]
-    F --> G[Grafana]
-    
-    classDef primary fill:#4285F4,stroke:#333,color:white,stroke-width:2px
-    classDef secondary fill:#34A853,stroke:#333,color:white,stroke-width:2px
-    classDef tertiary fill:#EA4335,stroke:#333,color:white,stroke-width:2px
-    
-    class A,D primary
-    class B,C secondary
-    class E,F,G tertiary
-    
-    %% Add a legend
-    subgraph Legend
-        direction LR
-        L1[Primary]:::primary <--> L2[Secondary]:::secondary <--> L3[Tertiary]:::tertiary
-    end
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│  Load Test  │───>│ Proxy Server │───>│ Unstable Backend│
+└─────────────┘    │(Circuit Breaker)│  └─────────────┘
+                  └─────────────┘
+                        ↑
+┌─────────────┐         │
+│ Event Loop  │─────────┘
+│  Pressure   │
+└─────────────┘
+       ↓
+┌─────────────┐    ┌─────────────┐
+│ Prometheus  │<───│   Metrics   │
+└─────────────┘    └─────────────┘
+       ↓
+┌─────────────┐
+│   Grafana   │
+└─────────────┘
 ```
 
 ## What This Project Demonstrates
@@ -207,6 +206,20 @@ After experiencing these fundamental limitations repeatedly, I've concluded that
 - Implementing circuit breaking at the infrastructure level with service meshes like Istio
 - Offloading CPU-intensive work to dedicated workers outside the Node.js process
 - Using a completely different architecture for resilience patterns
+
+## 📸 Screenshots
+
+### Event Loop Lag Under Load
+![Event Loop Lag](./assets/screenshots/lag.png)
+*Visualization of event loop lag spikes during high CPU usage*
+
+### Circuit Breaker - Closed State
+![Circuit Breaker Closed](./assets/screenshots/closed.png)
+*Healthy state with normal request flow and low error rates*
+
+### Circuit Breaker - Open State
+![Circuit Breaker Open](./assets/screenshots/open.png)
+*Circuit breaker triggered due to high error rates or timeouts*
 
 ## Running the Project
 
