@@ -22,21 +22,17 @@ function injectEventLoopPressure(durationMs: number, intensity: number): void {
     `Injecting event loop pressure for ${durationMs}ms with intensity ${intensity}`
   );
 
-  // calculate how many iterations we need based on intensity
   const iterationsPerMs = 10000 * intensity;
   const totalIterations = iterationsPerMs * durationMs;
 
-  // perform a CPU-intensive operation
   let counter = 0;
   while (counter < totalIterations) {
     counter++;
 
-    // add some randomness to make it harder to optimize
     if (Math.random() > 0.9999) {
       counter += 1000;
     }
 
-    // check if we've exceeded the requested duration
     if (counter % 100000 === 0) {
       const elapsedMs = Date.now() - startTime;
       if (elapsedMs >= durationMs) {

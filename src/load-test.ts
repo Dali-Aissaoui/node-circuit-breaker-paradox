@@ -111,14 +111,13 @@ async function makeRequest() {
 
   try {
     const response = await axios.get(url, {
-      timeout: 2000, // 2 second timeout
-      validateStatus: () => true, // Don't throw on HTTP error status
+      timeout: 2000,
+      validateStatus: () => true,
     });
 
     const latency = Date.now() - start;
     totalLatency += latency;
 
-    // record request duration
     requestDuration.labels(String(response.status)).set(latency);
 
     if (response.status === 200) {
@@ -147,7 +146,6 @@ async function runLoadTest() {
   const promises = [];
 
   for (let i = 0; i < REQUESTS; i++) {
-    // add some jitter to spread out the requests
     if (i > 0 && i % CONCURRENCY === 0) {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
@@ -184,70 +182,12 @@ async function runLoadTest() {
   // calculate statistics
   const total = successCount + errorCount;
   const errorRate = (errorCount / total) * 100;
-  const avgLatency = total > 0 ? Math.round(totalLatency / total) : 0;
-
-  // calculate memory statistics
-  const avgMemory =
-    memoryUsage.length > 0
-      ? Math.round(memoryUsage.reduce((a, b) => a + b, 0) / memoryUsage.length)
-      : 0;
-  const maxMemory = Math.max(...memoryUsage, 0);
-
-  // calculates event loop lag statistics
-  const avgLag =
-    eventLoopLag.length > 0
-      ? Math.round(
-          eventLoopLag.reduce((a, b) => a + b, 0) / eventLoopLag.length
-        )
-      : 0;
-  const maxLag = Math.max(...eventLoopLag, 0);
-
-  logger.info("\n=== Node.js Limitations Demonstrated ===");
-  logger.info("\n1. Event Loop Blocking:");
-  logger.info(`- Average event loop lag: ${avgLag}ms`);
-  logger.info(`- Maximum event loop lag: ${maxLag}ms`);
-  logger.warn(
-    "  → Node.js struggles with CPU-bound tasks as they block the event loop"
-  );
-
-  logger.info("\n2. Memory Management:");
-  logger.info(`- Average memory usage: ${avgMemory} MB`);
-  logger.info(`- Peak memory usage: ${maxMemory} MB`);
-  logger.warn("  → Memory usage can grow under load without proper cleanup");
-
-  logger.info("\n3. Error Handling:");
-  logger.info(`- Unhandled promise rejections: ${unhandledRejections}`);
-  logger.info(`- Error rate: ${errorRate.toFixed(1)}%`);
-  logger.warn("  → Unhandled errors can crash the application");
-
-  logger.info("\n4. Circuit Breaker Effectiveness:");
-  logger.info(`- Success: ${successCount} (${(100 - errorRate).toFixed(1)}%)`);
-  logger.info(`- Errors: ${errorCount} (${errorRate.toFixed(1)}%)`);
 
   if (errorRate > 30) {
     logger.warn(
-      "  → High error rate shows circuit breaker is not effective enough"
-    );
-  } else {
-    logger.warn(
-      "  → Circuit breaker might be too sensitive, blocking valid requests"
+      "high error rate detected. the circuit breaker should have been triggered."
     );
   }
-
-  logger.info("\n=== Node.js Limitations Summary ===");
-  logger.warn("1. Single-threaded nature causes event loop blocking");
-  logger.warn("2. Memory leaks can occur under high load");
-  logger.warn("3. Error handling is challenging in async/await patterns");
-  logger.warn(
-    "4. Circuit breaking is less effective due to event-driven model"
-  );
-
-  // Log final results
-  logger.info("\n=== Load Test Results ===");
-  logger.info(`Total requests: ${total}`);
-  logger.info(`Successful: ${successCount} (${(100 - errorRate).toFixed(1)}%)`);
-  logger.info(`Errors: ${errorCount} (${errorRate.toFixed(1)}%)`);
-  logger.info(`Average latency: ${avgLatency}ms`);
 
   if (errorRate > 30) {
     logger.warn(
