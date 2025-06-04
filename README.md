@@ -124,7 +124,7 @@ This project consists of several components working together:
 
 ```mermaid
 graph TD
-    A[Load Test] --> B[Proxy Server\n(Circuit Breaker)]
+    A[Load Test] --> B[Proxy Server (CB)]
     B --> C[Unstable Backend]
     D[Event Loop Pressure] --> B
     B --> E[Metrics]
@@ -138,6 +138,12 @@ graph TD
     class A,D primary
     class B,C secondary
     class E,F,G tertiary
+    
+    %% Add a legend
+    subgraph Legend
+        direction LR
+        L1[Primary]:::primary <--> L2[Secondary]:::secondary <--> L3[Tertiary]:::tertiary
+    end
 ```
 
 ## What This Project Demonstrates
