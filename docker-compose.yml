@@ -1,0 +1,95 @@
+services:
+  unstable_backend:
+    container_name: unstable_backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - opossum-network
+
+  proxy_server:
+    container_name: proxy_server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run start:proxy
+    ports:
+      - "3002:3002"
+    depends_on:
+      - unstable_backend
+    environment:
+      - NODE_ENV=production
+      - BACKEND_URL=http://unstable_backend:3001
+    networks:
+      - opossum-network
+
+  event_loop_pressure:
+    container_name: event_loop_pressure
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run pressure
+    depends_on:
+      - proxy_server
+    environment:
+      - NODE_ENV=production
+    networks:
+      - opossum-network
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - opossum-network
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3003:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - opossum-network
+
+  load_test:
+    container_name: load_test
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "sleep 15 && npm run load-test"
+    ports:
+      - "9091:9091"
+    depends_on:
+      - proxy_server
+      - event_loop_pressure
+      - prometheus
+      - grafana
+    environment:
+      - NODE_ENV=production
+      - TARGET_URL=http://proxy_server:3002/api/data
+    networks:
+      - opossum-network
+
+networks:
+  opossum-network:
+    driver: bridge
+
+volumes:
+  grafana-storage:
