@@ -74,17 +74,14 @@ I still remember the "aha!" moment when I finally understood it. Basically, even
 
 ### Visual Representation
 
-```
-   ┌───────────────────────────┐
-┌─>│           Call Stack      │
-│  └───────────────────────────┘
-│  ┌───────────────────────────┐
-│  │      WebAPIs/C++ APIs     │
-│  └───────────────────────────┘
-│  ┌───────────────────────────┐
-│  │        Callback Queue     │
-└──│  (setTimeout, I/O, etc.)  │
-   └───────────────────────────┘
+```mermaid
+flowchart TD
+    A[Call Stack] --> B[WebAPIs/C++ APIs]
+    B --> C[Callback Queue]
+    C -->|Event Loop| A
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#9f9,stroke:#333,stroke-width:2px
 ```
 
 ### Event Loop Phases
@@ -125,24 +122,22 @@ This project consists of several components working together:
 
 ### Service Interaction
 
-```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  Load Test  │───>│ Proxy Server │───>│ Unstable Backend│
-└─────────────┘    │(Circuit Breaker)│  └─────────────┘
-                  └─────────────┘
-                        ↑
-┌─────────────┐         │
-│ Event Loop  │─────────┘
-│  Pressure   │
-└─────────────┘
-       ↓
-┌─────────────┐    ┌─────────────┐
-│ Prometheus  │<───│   Metrics   │
-└─────────────┘    └─────────────┘
-       ↓
-┌─────────────┐
-│   Grafana   │
-└─────────────┘
+```mermaid
+graph TD
+    A[Load Test] --> B[Proxy Server\n(Circuit Breaker)]
+    B --> C[Unstable Backend]
+    D[Event Loop Pressure] --> B
+    B --> E[Metrics]
+    E --> F[Prometheus]
+    F --> G[Grafana]
+    
+    classDef primary fill:#4285F4,stroke:#333,color:white,stroke-width:2px
+    classDef secondary fill:#34A853,stroke:#333,color:white,stroke-width:2px
+    classDef tertiary fill:#EA4335,stroke:#333,color:white,stroke-width:2px
+    
+    class A,D primary
+    class B,C secondary
+    class E,F,G tertiary
 ```
 
 ## What This Project Demonstrates
